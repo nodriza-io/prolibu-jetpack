@@ -11,26 +11,18 @@
   ],
   "activationEvents": [
     "onCommand:extension.abrirCsv",
-    "onCommand:extension.runProlibuCLI"
+    "onCommand:extension.start"
   ],
   "main": "./extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "extension.createDomain",
-        "title": "PRL: Create Domain"
-      },
-      {
-        "command": "extension.importDomain",
-        "title": "PRL: Import Domain"
-      },
-      {
         "command": "extension.abrirCsv",
-        "title": "PRL: Front"
+        "title": "PRL: Watch CSV"
       },
       {
-        "command": "extension.runProlibuCLI",
-        "title": "Ejecutar Prolibu CLI"
+        "command": "extension.start",
+        "title": "PRL: Start"
       }
     ],
     "configuration": {

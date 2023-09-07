@@ -98,17 +98,21 @@ const { promisify } = require('util');
 
 function activate(context) {
 
+	let startDisposable = vscode.commands.registerCommand('extension.start', function () {
+		const terminal = vscode.window.createTerminal('Mi Terminal');
+		terminal.show();
+	});
+
 	let disposable = vscode.commands.registerCommand(
 		"extension.abrirCsv",
 		function () {
 			const terminal = vscode.window.createTerminal("Prolibu");
 			terminal.show();
-
 			const cliPath = path.join(__dirname, 'cli.js');
-
 			terminal.sendText(`alias prolibu="node ${cliPath}"`);
 		}
 	);
+	
 
 	// async function convertXlsxToCsv(xlsxPath, csvPath) {
 	// 	const workbook = new ExcelJS.Workbook();
@@ -190,7 +194,10 @@ function activate(context) {
 			for (let i = 0; i < backupRows.length; i++) {
 				const backupRow = backupRows[i];
 				const tempRow = originalRows[i];
-
+				if (!backupRow || !tempRow) {
+					continue; // saltar a la siguiente iteración
+				  }
+				  
 				let rowChanged = false;
 
 				for (const [key, value] of Object.entries(backupRow)) {
@@ -200,9 +207,33 @@ function activate(context) {
 					}
 				}
 				if (rowChanged) {
-					modifiedRows[fileNameWithoutExtension].push(tempRow);
+					if (tempRow.hasOwnProperty('_id') && tempRow['_id']) {
+						// Si la fila tiene un _id y este _id no es vacío, añade toda la fila
+						modifiedRows[fileNameWithoutExtension].push(tempRow);
+					} else {
+						// Si la fila no tiene un _id o es vacío, añade sólo las columnas que tienen datos
+						const filteredRow = {};
+						for (const [key, value] of Object.entries(tempRow)) {
+							if (value) {
+								filteredRow[key] = value;
+							}
+						}
+						modifiedRows[fileNameWithoutExtension].push(filteredRow);
+						console.log('tempRow antes de modificar:', JSON.stringify(tempRow, null, 2));
+						console.log('filteredRow antes de modificar:', JSON.stringify(filteredRow, null, 2));
+						// ... tu código de modificación aquí ...
+						console.log('modifiedRows después de modificar:', JSON.stringify(modifiedRows, null, 2));
+
+					}
+					
 					console.log(`Fila modificada: ${JSON.stringify(tempRow)}`);
 				}
+				
+				
+				// if (rowChanged) {
+				// 	modifiedRows[fileNameWithoutExtension].push(tempRow);
+				// 	console.log(`Fila modificada: ${JSON.stringify(tempRow)}`);
+				// }
 			}
 			// const copyFileAsync = promisify(fs.copyFile);
 			// await copyFileAsync(backupCSVPath, copyOriginalCSVPath);
@@ -224,7 +255,7 @@ function activate(context) {
 			
 			// Guarda las filas modificadas en el archivo JSON en el mismo directorio que el archivo XLSX.
 			console.log(`Guardando filas modificadas en ${fullPathToJsonFile}`);
-			console.log(JSON.stringify(modifiedRows, null, 2));
+			console.log('objeto---', JSON.stringify(modifiedRows, null, 2));
 
 			fs.writeFileSync(fullPathToJsonFile, JSON.stringify(modifiedRows));
 
@@ -234,5 +265,7 @@ function activate(context) {
 	});
 
 	context.subscriptions.push(disposable);
+	context.subscriptions.push(startDisposable);
+
 }
 exports.activate = activate;
