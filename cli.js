@@ -3,6 +3,8 @@ const fs = require("fs");
 const { program } = require('commander');
 const axios = require('axios');
 const XLSX = require('xlsx'); // Asegúrate de tener instalado este paquete
+const WebSocket = require('ws');
+const ws = new WebSocket.Server({ port: 3250 });
 
 
 async function updateExcelFile(excelFilePath, serviceResponse) {
@@ -146,8 +148,8 @@ async function getDomainList() {
 }
 
 program
-  .name('prolibu')
-  .description('Ya puedes usar el comando "prolibu" en la terminal para ejecutar este programa.');
+  .name('jp')
+  .description('Ya puedes usar el comando "jp" en la terminal para ejecutar este programa.');
 
 
 program
@@ -174,6 +176,28 @@ program
       }
       console.log("Dominios disponibles:", domainList);
       if (domainList.includes(domain)) {
+        ws.on('error', (error) => {
+          console.log(`Error en el servidor WebSocket: ${error}`);
+        });
+        ws.on('connection', (ws) => {
+          console.log('Nuevo cliente conectado');
+        
+          ws.on('message', (message) => {
+            console.log(`Recibido: ${message}`);
+          });
+        
+          // Simulación de actualización de datos que se enviarían al cliente
+          setInterval(() => {
+            const data = {
+              firstName: 'vscode',
+              lastName: 'juan',
+              email: 'juan@example.com'
+            };
+            ws.send(JSON.stringify(data));
+          }, 5000); // Envía nuevos datos cada 5 segundos
+        });
+
+
         // Leer el archivo config.json para obtener la apikey
         const configPath = path.join(__dirname, 'accounts', domain, 'config.json');
         const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
@@ -203,15 +227,20 @@ program
 
         function convertFields(obj) {
           Object.keys(obj).forEach(key => {
-            if (obj[key] === "") {
+            if (key === "whatsapp" && obj[key] === "") {
+              obj[key] = ""; // No lo cambia, se mantiene como una cadena vacía
+            } else if (obj[key] === "") {
               obj[key] = null;
             } else if (obj[key] === "TRUE") {
-              obj[key] = "true";  // Cambia esto a "true" si prefieres que sea una cadena
+              obj[key] = "true";  // Cambia esto a true si prefieres que sea un booleano
+            } else if (obj[key] === "FALSE") {
+              obj[key] = "false";  // Cambia esto a false si prefieres que sea un booleano
             } else if (typeof obj[key] === 'object' && obj[key] !== null) { // para objetos anidados
               convertFields(obj[key]);
             }
           });
         }
+        
 
         // Uso de la función en tu código existente
         const dataToSend = modifiedRows[modelName];
@@ -221,19 +250,42 @@ program
 
         console.log('Data to send:', JSON.stringify(dataToSend, null, 2));
 
+        
+
         try {
           const response = await axios.post(`https://dev4.prolibu.com/v2/service/importdata/${modelName}`, dataToSend, config);
           console.log(`Respuesta del servidor: ${response.status}`);
 
            // Aquí recibes la respuesta del servicio que contiene los elementos 'created' y 'updated'
         const serviceResponse = response.data; // Ajusta esto de acuerdo a cómo el servicio devuelva los datos
+        console.log("serviceResponse---------",serviceResponse)
 
+        /*****************
+          WEBSOCKET*/
+          // wss.on('connection', (ws) => {
+          //   console.log('Nuevo cliente conectado');
+          
+          //   ws.on('message', (message) => {
+          //     console.log(`Recibido: ${message}`);
+          //   });
+          
+          //   // Simulación de actualización de datos que se enviarían al cliente
+          //   setInterval(() => {
+          //     const data = {
+          //       firstName: 'John',
+          //       lastName: 'Doe',
+          //       email: 'johndoe@example.com'
+          //     };
+          //     ws.send(JSON.stringify(data));
+          //   }, 5000); // Envía nuevos datos cada 5 segundos
+          // });
+        /****************/
         // Actualiza el archivo Excel con los datos recibidos
         const excelFilePath = path.join(__dirname, "accounts", domain, `${modelName}.xlsx`); // Ruta al archivo Excel que quieres actualizar
 
-        console.log(`Actualizando el archivo Excel: ${excelFilePath}`);
+        //console.log(`Actualizando el archivo Excel: ${excelFilePath}`);
         //await updateExcelFile(excelFilePath, serviceResponse);  // Suponiendo que `updateExcelFile` es una función async
-        console.log('Archivo Excel actualizado.');
+        //console.log('Archivo Excel actualizado.');
           // Suponiendo que tienes los datos de "created" y "updated" en variables
           // let createdCount = response.created.length; // Reemplaza "created" con los datos reales
           // let updatedCount = response.updated.length; // Reemplaza "updated" con los datos reales

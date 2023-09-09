@@ -1,65 +1,67 @@
-# dev-prolibu README
 
-This is the README for your extension "dev-prolibu". After writing up a brief description, we recommend including the following sections.
+# Jetpack:
 
-## Features
+## Descripción
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+Jetpack is an automation tool that allows the export of models from Prolibu, such as `user`, `proposal`, `categories`, etc., in Excel format. The tool works locally but also automatically synchronizes all changes in the cloud.
 
-For example if there is an image subfolder under your extension project workspace:
+## Main Features
 
-\!\[feature X\]\(images/feature-x.png\)
+- Export of various models (e.g., `user`, `proposal`, `categories`) in formats such as Excel.
+- Local work with automatic synchronization in the cloud.
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+## Workflow
 
-## Requirements
+### Login
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+To lognin, use the following command:
 
-## Extension Settings
+```bash
+jp signin [domain] [email] [password]
+```
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+This command logs into the extension, creates a folder in `accounts` with the domain name and inserts a `config.json` file containing the API Key.
 
-For example:
+### Data Import
 
-This extension contributes the following settings:
+To import data, run:
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+```bash
+jp import [domain]
+```
 
-## Known Issues
+With the following options (`flags`):
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+- `-c collection`: Specifies the collection to import. Example: `[user]`.
+- `-q query`: Specifies a query to filter the data. Example: `[user,categories]`.
+- `-or output`: Specifies the format in which you want to import. Example: `[excel, csv]`.
 
-## Release Notes
+### Data Export
 
-Users appreciate release notes as you update your extension.
+To export data, run: 
 
-### 1.0.0
+```bash
+jp export [domain]
+```
 
-Initial release of ...
+This command exports all changes made.
 
-### 1.0.1
+## Installation
 
-Fixed issue #.
+To install Jetpack, run the following command:
 
-### 1.1.0
+```bash
+npm install
+```
 
-Added features X, Y, and Z.
+## Technical Usage
 
----
+Here is an example of how to execute the import command with all options:
 
-## Working with Markdown
+```bash
+jp import acme -c user -q "user,categories" -o excel
+```
 
-You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
+## Support
 
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+For further information or assistance, contact the support team.

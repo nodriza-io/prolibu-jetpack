@@ -131,7 +131,12 @@ function activate(context) {
 	const accountsDir = path.join(__dirname, 'accounts');
 
 	const watcher = chokidar.watch(accountsDir, {
-		ignored: [/(^|[\/\\])\../, /^\.~lock\./, /\.json$/],
+		ignored: [
+			/(^|[\/\\])\../, 
+			/^\.~lock\./, 
+			/\.json$/, 
+			/[\/\\]~\$.+\.xlsx$/  // Este patrón debería excluir los archivos que comienzan con ~$ y terminan con .xlsx
+		],
 		persistent: true
 	});
 
@@ -143,8 +148,8 @@ function activate(context) {
 			console.log(`Nuevo archivo añadido: ${newFilePath}`);
 
 			const fileName = path.basename(newFilePath); // Obtener el nombre del archivo sin la ruta completa
-			const backupPath = path.join(path.dirname(newFilePath), '.data', fileName); // Ruta para la copia de seguridad
-
+			const backupPath = path.join(path.dirname(newFilePath), 'data', fileName); // Ruta para la copia de seguridad
+			console.log('backupPath-----', backupPath)
 			fs.copyFile(newFilePath, backupPath, async (err) => {
 				if (err) throw err;
 				console.log(`Archivo original copiado para respaldo como ${backupPath}.`);
@@ -176,10 +181,10 @@ function activate(context) {
 			// Quita la extensión
 			const fileNameWithoutExtension = fileNameWithExtension.replace(path.extname(fileNameWithExtension), '');
 			modifiedRows[fileNameWithoutExtension] = modifiedRows[fileNameWithoutExtension] || [];
-			const copyOriginalCSVPath = path.join(path.dirname(changedPath), '.data', `${originalFileName}_original.csv`);
+			const copyOriginalCSVPath = path.join(path.dirname(changedPath), 'data', `${originalFileName}_original.csv`);
 			console.log(`Archivo original copiado: ${copyOriginalCSVPath}`);
 
-			const backupCSVPath = path.join(path.dirname(changedPath), '.data', `${originalFileName}_backup.csv`);
+			const backupCSVPath = path.join(path.dirname(changedPath), 'data', `${originalFileName}_backup.csv`);
 			console.log(`Archivo backupCSVPath change: ${backupCSVPath}`);
 
 			await convertXLSXToCSV(changedPath, backupCSVPath);
@@ -188,16 +193,26 @@ function activate(context) {
 			console.log(`Archivo backupCSV: ${backupCSV}`);
 			const originalCopyCSV = fs.readFileSync(copyOriginalCSVPath, 'utf8');
 			console.log(`Archivo originalCopyCSV: ${originalCopyCSV}`);
+
 			const backupRows = Papa.parse(backupCSV, { header: true }).data;
 			const originalRows = Papa.parse(originalCopyCSV, { header: true }).data;
 		
-			for (let i = 0; i < backupRows.length; i++) {
+
+			const maxLength = Math.max(backupRows.length, originalRows.length);
+
+			for (let i = 0; i < maxLength; i++) {
 				const backupRow = backupRows[i];
 				const tempRow = originalRows[i];
-				if (!backupRow || !tempRow) {
+				if (!backupRow && tempRow) {
+					// Esto significa que tempRow es una nueva fila agregada
+					modifiedRows[fileNameWithoutExtension].push(tempRow);
+					continue;
+				  }
+
+				  if (!backupRow || !tempRow) {
 					continue; // saltar a la siguiente iteración
 				  }
-				  
+			
 				let rowChanged = false;
 
 				for (const [key, value] of Object.entries(backupRow)) {
@@ -209,7 +224,7 @@ function activate(context) {
 				if (rowChanged) {
 					if (tempRow.hasOwnProperty('_id') && tempRow['_id']) {
 						// Si la fila tiene un _id y este _id no es vacío, añade toda la fila
-						modifiedRows[fileNameWithoutExtension].push(tempRow);
+						modifiedRows[fileNameWithoutExtension].push(backupRow);
 					} else {
 						// Si la fila no tiene un _id o es vacío, añade sólo las columnas que tienen datos
 						const filteredRow = {};
