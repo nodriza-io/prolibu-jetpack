@@ -1,63 +1,27 @@
 {
-  "name": "dev-prolibu",
-  "displayName": "dev-prolibu",
+  "name": "jetpack",
+  "version": "1.0.0",
   "description": "",
-  "version": "0.0.1",
-  "engines": {
-    "vscode": "^1.81.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [
-    "onCommand:extension.abrirCsv",
-    "onCommand:extension.start"
-  ],
-  "main": "./extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "extension.abrirCsv",
-        "title": "PRL: Watch CSV"
-      },
-      {
-        "command": "extension.start",
-        "title": "PRL: Start"
-      }
-    ],
-    "configuration": {
-      "title": "Configuración de Mi Extensión",
-      "properties": {
-        "miExtension.userData": {
-          "type": "object",
-          "default": "",
-          "description": "Ruta principal para los archivos CSV."
-        }
-      }
-    }
-  },
+  "main": "jetpack.js",
   "scripts": {
-    "lint": "eslint .",
-    "pretest": "npm run lint",
-    "test": "node ./test/runTest.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "devDependencies": {
-    "@types/mocha": "^10.0.1",
-    "@types/node": "16.x",
-    "@types/vscode": "^1.81.0",
-    "@vscode/test-electron": "^2.3.4",
-    "eslint": "^8.47.0",
-    "glob": "^10.3.3",
-    "mocha": "^10.2.0",
-    "typescript": "^5.1.6"
-  },
+  "author": "Juan Carlos Prieto",
+  "license": "ISC",
   "dependencies": {
     "axios": "^1.5.0",
     "chokidar": "^3.5.3",
-    "commander": "^11.0.0",
-    "exceljs": "^4.3.0",
+    "cli-progress": "^3.12.0",
+    "form-data": "^4.0.0",
     "inquirer": "^9.2.10",
+    "inquirer-autocomplete-prompt": "^3.0.0",
     "papaparse": "^5.4.1",
-    "xlsx": "^0.18.5"
+    "yargs": "^17.7.2"
+  },
+  "type": "commonjs",
+  "devDependencies": {
+    "eslint": "^8.49.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.28.1"
   }
 }
