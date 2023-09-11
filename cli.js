@@ -3,9 +3,56 @@ const fs = require("fs");
 const { program } = require('commander');
 const axios = require('axios');
 const XLSX = require('xlsx'); // Asegúrate de tener instalado este paquete
-const WebSocket = require('ws');
-const ws = new WebSocket.Server({ port: 3250 });
+const os = require('os');
+const ExcelJS = require('exceljs');
 
+const userHome = os.homedir();
+const documentsPath = path.join(userHome, 'Documents');
+const directoryPath = path.join(documentsPath, 'accounts'); // Reemplaza 'nombreDeTuDirectorio' con el nombre que desees
+
+//const ws = new WebSocket.Server({ port: 3250 });
+
+// Definición de la función validateToken
+
+
+function flattenObject(ob) {
+  const toReturn = {};
+  
+  function innerFlatten(obj, prefix = '') {
+    for (const i in obj) {
+      const propName = (prefix ? prefix + '.' : '') + i;
+      if (typeof obj[i] === 'object' && !Array.isArray(obj[i])) {
+        innerFlatten(obj[i], propName);
+      } else {
+        toReturn[propName] = obj[i];
+      }
+    }
+  }
+  
+  innerFlatten(ob);
+  return toReturn;
+}
+
+
+
+function writeMessage(message) {
+  const fileMessage = path.join(__dirname, 'message.txt');
+  console.log(`Escribiendo mensaje en el archivo: ${fileMessage}`);
+  fs.writeFileSync(fileMessage, message, 'utf-8');
+}
+
+async function validateToken(domain) {
+  //const domainFolder = path.join(__dirname, 'accounts', domain);
+  const configPath = path.join(directoryPath, domain, 'config.json');
+  if (fs.existsSync(configPath)) {
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    // Lógica para validar el token con la API
+    // Si no es válido, borrar el token y pedir al usuario que haga login nuevamente
+  } else {
+    writeMessage(`Por favor, inicie sesión primero en el dominio: ${domain}`)
+    process.exit(1);
+  }
+}
 
 async function updateExcelFile(excelFilePath, serviceResponse) {
   const workbook = XLSX.readFile(excelFilePath);
@@ -91,53 +138,193 @@ async function updateExcelFile(excelFilePath, serviceResponse) {
   XLSX.writeFile(workbook, excelFilePath);
 }
 
-// Función que implementa el comando 'import'
 async function importFunction(domain, options) {
-  (async () => {
-    let domainList;
-    try {
-      domainList = await getDomainList();
-    } catch (err) {
-      console.error("Error al leer el directorio 'accounts':", err);
-      return;
-    }
-    console.log("Dominios disponibles:", domainList);
-    console.log(`Importando para el dominio ${domain} con opciones: ${JSON.stringify(options)}`);
-    // URL del servicio externo que devuelve un archivo Excel
-    const url = 'https://dev4.prolibu.com/v2/user/?exportData=true&format=xlsx';
+  writeMessage(`Importando para el dominio ${domain}`)
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Users');
 
-    // Realizar la petición HTTP GET
-    axios({
-      method: 'get',
-      url: url,
-      responseType: 'stream',
-      maxBodyLength: Infinity,
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': `Bearer bf991800d5ed76f154a49c53a3fd5a6c4e04afe9ac3df4616a3206aaade691cafae0f194c892cbe56d8944b200364364`
+  let currentPage = 1;
+  let allData = [];
+  let moreData = true;
+
+  // Función para aplanar un objeto
+  const flattenObject = function(ob) {
+    const toReturn = {};
+    
+    for (const i in ob) {
+      if (!ob.hasOwnProperty(i)) continue;
+      
+      if ((typeof ob[i]) === 'object' && !Array.isArray(ob[i])) {
+        const flatObject = flattenObject(ob[i]);
+        for (const x in flatObject) {
+          if (!flatObject.hasOwnProperty(x)) continue;
+          toReturn[`${i}.${x}`] = flatObject[x];
+        }
+      } else {
+        toReturn[i] = ob[i];
       }
-    })
-      .then((response) => {
-        // Especificar la ubicación y nombre del archivo donde se guardará
-        const filepath = path.resolve(__dirname, 'descarga.xlsx');
+    }
+    return toReturn;
+  };
 
-        // Crear un stream de escritura para guardar el archivo
-        const writer = fs.createWriteStream(filepath);
+  while (moreData) {
+    const pageData = await getUsersByPage(currentPage);  // Asumiendo que esta función existe
 
-        // Escribir los datos en el archivo a medida que se reciben
-        response.data.pipe(writer);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  })();
+    if (pageData.length === 0) {
+      moreData = false;
+      break;
+    }
+
+    // Aplana cada objeto en pageData
+    const flattenedPageData = pageData.map(data => flattenObject(data));
+
+    allData = [...allData, ...flattenedPageData];
+    currentPage++;
+  }
+
+  if (allData.length > 0) {
+    const firstRow = allData[0];
+    worksheet.columns = Object.keys(firstRow).map(key => ({ header: key, key: key }));
+  }
+
+  // Añade todos los datos al worksheet
+  allData.forEach((row, index) => {
+    worksheet.addRow(row);
+  });
+
+  const filepath = path.resolve(directoryPath, domain, 'user.xlsx');
+  await workbook.xlsx.writeFile(filepath);
+  writeMessage(`Importación exitosa para el dominio ${domain}`)
 }
+
+// async function importFunction(domain, options) {
+//   const workbook = new ExcelJS.Workbook();
+//   const worksheet = workbook.addWorksheet('Users');
+
+//   let currentPage = 1;
+//   let allData = [];
+//   let moreData = true;
+
+//   while (moreData) {
+//     const pageData = await getUsersByPage(currentPage);
+
+//     if (pageData.length === 0) {
+//       moreData = false;
+//       break;
+//     }
+
+//     // Aplana cada objeto en pageData
+//     const flattenedPageData = pageData.map(data => flattenObject(data));
+    
+//     allData = [...allData, ...flattenedPageData];
+//     currentPage++;
+//   }
+
+//   if (allData.length > 0) {
+//     const firstRow = allData[0];
+//     worksheet.columns = Object.keys(firstRow).map(key => ({ header: key, key: key }));
+//   }
+
+//   // Añade todos los datos al worksheet
+//   allData.forEach((row, index) => {
+//     worksheet.addRow(row);
+//   });
+
+//   const filepath = path.resolve(directoryPath, domain, 'user.xlsx');
+//   await workbook.xlsx.writeFile(filepath);
+// }
+
+async function getUsersByPage(page) {
+  const url = `https://dev4.prolibu.com/v2/user?page=${page}&exportData=true&format=json`;
+  
+  // Configura tus headers y demás opciones aquí
+  const config = {
+    headers: {
+      'Authorization': 'Bearer bf991800d5ed76f154a49c53a3fd5a6c4e04afe9ac3df4616a3206aaade691cafae0f194c892cbe56d8944b200364364'
+    }
+  };
+  
+  try {
+    const response = await axios.get(url, config);
+    console.log(`Import successful for page ${page}`)
+    writeMessage(`Import successful for page`)
+    return response.data; // Ajusta esto según la estructura de tu respuesta
+  } catch (error) {
+    writeMessage(`Error fetching page ${page}: ${error}`)
+    console.error(`Error fetching page ${page}:`, error);
+    return [];
+  }
+}
+
+
+async function getUsersByPage(page) {
+  const url = `https://dev4.prolibu.com/v2/user?page=${page}&exportData=true&format=json`;
+  
+  // Configura tus headers y demás opciones aquí
+  const config = {
+    headers: {
+      'Authorization': 'Bearer bf991800d5ed76f154a49c53a3fd5a6c4e04afe9ac3df4616a3206aaade691cafae0f194c892cbe56d8944b200364364'
+    }
+  };
+  
+  try {
+    const response = await axios.get(url, config);
+    return response.data; // Ajusta esto según la estructura de tu respuesta
+  } catch (error) {
+    console.error(`Error fetching page ${page}:`, error);
+    return [];
+  }
+}
+
+// Función que implementa el comando 'import'
+// async function importFunction(domain, options) {
+//   (async () => {
+//     await validateToken(domain);
+//     let domainList;
+//     try {
+//       domainList = await getDomainList();
+//     } catch (err) {
+//       console.error("Error al leer el directorio 'accounts':", err);
+//       return;
+//     }
+//     console.log("Dominios disponibles:", domainList);
+//     console.log(`Importando para el dominio ${domain} con opciones: ${JSON.stringify(options)}`);
+//     // URL del servicio externo que devuelve un archivo Excel
+//     const url = 'https://dev4.prolibu.com/v2/user/?exportData=true&format=xlsx';
+
+//     // Realizar la petición HTTP GET
+//     axios({
+//       method: 'get',
+//       url: url,
+//       responseType: 'stream',
+//       maxBodyLength: Infinity,
+//       headers: {
+//         'Accept': 'application/json',
+//         'Authorization': `Bearer bf991800d5ed76f154a49c53a3fd5a6c4e04afe9ac3df4616a3206aaade691cafae0f194c892cbe56d8944b200364364`
+//       }
+//     })
+//       .then((response) => {
+        
+//         // Especificar la ubicación y nombre del archivo donde se guardará
+//         const filepath = path.resolve(__dirname, 'descarga.xlsx');
+
+//         // Crear un stream de escritura para guardar el archivo
+//         const writer = fs.createWriteStream(filepath);
+
+//         // Escribir los datos en el archivo a medida que se reciben
+//         response.data.pipe(writer);
+//       })
+//       .catch((error) => {
+//         console.log(error);
+//       });
+//   })();
+// }
 
 // Función para obtener la lista de dominios desde el directorio 'accounts'
 async function getDomainList() {
-  const accountsPath = path.join(__dirname, "accounts"); // Asegúrate de que esta sea la ruta correcta al directorio 'accounts'
+  //const accountsPath = path.join(__dirname, "accounts"); // Asegúrate de que esta sea la ruta correcta al directorio 'accounts'
   return new Promise((resolve, reject) => {
-    fs.readdir(accountsPath, (err, files) => {
+    fs.readdir(directoryPath, (err, files) => {
       if (err) {
         reject(err);
         return;
@@ -146,7 +333,6 @@ async function getDomainList() {
     });
   });
 }
-
 program
   .name('jp')
   .description('Ya puedes usar el comando "jp" en la terminal para ejecutar este programa.');
@@ -159,7 +345,10 @@ program
   .option('-q, --query', 'Realizar una consulta')
   .option('-o, --output <output>', 'Especifica el archivo de salida')
   .action((domain, options) => {
-    importFunction(domain, options)
+    (async () => {
+      await validateToken(domain);
+      importFunction(domain, options)
+    })();
   });
 
 program
@@ -167,6 +356,7 @@ program
   .description('exportar datos desde un dominio especificado')  // Agrega la descripción aquí
   .action((domain) => {
     (async () => {
+      await validateToken(domain);
       let domainList;
       try {
         domainList = await getDomainList();
@@ -176,37 +366,37 @@ program
       }
       console.log("Dominios disponibles:", domainList);
       if (domainList.includes(domain)) {
-        ws.on('error', (error) => {
-          console.log(`Error en el servidor WebSocket: ${error}`);
-        });
-        ws.on('connection', (ws) => {
-          console.log('Nuevo cliente conectado');
+        // ws.on('error', (error) => {
+        //   console.log(`Error en el servidor WebSocket: ${error}`);
+        // });
+        // ws.on('connection', (ws) => {
+        //   console.log('Nuevo cliente conectado');
         
-          ws.on('message', (message) => {
-            console.log(`Recibido: ${message}`);
-          });
+        //   ws.on('message', (message) => {
+        //     console.log(`Recibido: ${message}`);
+        //   });
         
-          // Simulación de actualización de datos que se enviarían al cliente
-          setInterval(() => {
-            const data = {
-              firstName: 'vscode',
-              lastName: 'juan',
-              email: 'juan@example.com'
-            };
-            ws.send(JSON.stringify(data));
-          }, 5000); // Envía nuevos datos cada 5 segundos
-        });
+        //   // Simulación de actualización de datos que se enviarían al cliente
+        //   setInterval(() => {
+        //     const data = {
+        //       firstName: 'vscode',
+        //       lastName: 'juan',
+        //       email: 'juan@example.com'
+        //     };
+        //     ws.send(JSON.stringify(data));
+        //   }, 5000); // Envía nuevos datos cada 5 segundos
+        // });
 
 
         // Leer el archivo config.json para obtener la apikey
-        const configPath = path.join(__dirname, 'accounts', domain, 'config.json');
+        const configPath = path.join(directoryPath, domain, 'config.json');
         const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
         const apiKey = configData.apikey;
         console.log(`Enviando data para el dominio: ${domain}`);
 
         // Construye la ruta al archivo JSON
         //const jsonFilePath = path.join('ruta/a/tu/directorio/de/dominios', domain, 'temp.json');
-        const jsonFilePath = path.join(__dirname, "accounts", domain, 'data.json'); // Asegúrate de que esta sea la ruta correcta al directorio 'accounts'
+        const jsonFilePath = path.join(directoryPath, domain, 'data.json'); // Asegúrate de que esta sea la ruta correcta al directorio 'accounts'
 
         // Lee el archivo JSON
         const jsonData = fs.readFileSync(jsonFilePath, 'utf8');
@@ -281,7 +471,7 @@ program
           // });
         /****************/
         // Actualiza el archivo Excel con los datos recibidos
-        const excelFilePath = path.join(__dirname, "accounts", domain, `${modelName}.xlsx`); // Ruta al archivo Excel que quieres actualizar
+        const excelFilePath = path.join(directoryPath, domain, `${modelName}.xlsx`); // Ruta al archivo Excel que quieres actualizar
 
         //console.log(`Actualizando el archivo Excel: ${excelFilePath}`);
         //await updateExcelFile(excelFilePath, serviceResponse);  // Suponiendo que `updateExcelFile` es una función async
@@ -317,12 +507,13 @@ program
 
       if (respSignin.status === 200) {
         let token = respSignin.data.apiKey;
-        if (!fs.existsSync(__dirname, 'accounts')) {
-          fs.mkdirSync(__dirname, 'accounts');
+
+        if (!fs.existsSync(directoryPath)) {
+          fs.mkdirSync(directoryPath);
         }
 
         // Crear la carpeta del dominio dentro de 'accounts'
-        const domainFolder = path.join(__dirname, 'accounts', domain);
+        const domainFolder = path.join(directoryPath, domain);
         if (!fs.existsSync(domainFolder)) {
           fs.mkdirSync(domainFolder);
         }
@@ -360,6 +551,7 @@ program
     }
   });
 program.parse(process.argv);
+
 // Si ningún comando se ha dado, mostrar la ayuda.
 if (!process.argv.slice(2).length) {
   program.outputHelp();

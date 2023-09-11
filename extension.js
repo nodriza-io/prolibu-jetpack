@@ -6,7 +6,24 @@ const path = require('path');
 const XLSX = require('xlsx');
 const Papa = require('papaparse');
 const { promisify } = require('util');
+const net = require('net');
+const messagePath = path.join(__dirname, 'message.txt');
+const os = require('os');
 
+function readAndAlert() {
+    if (fs.existsSync(messagePath)) {
+        const message = fs.readFileSync(messagePath, 'utf-8').trim();
+        if (message) {
+			console.log(message)
+            vscode.window.showInformationMessage(message);
+            // Limpiar el archivo para no repetir el mensaje
+            fs.writeFileSync(messagePath, '', 'utf-8');
+        }
+    }
+}
+
+// Leer el archivo cada 5 segundos
+setInterval(readAndAlert, 2000);
 // async function convertXLSXToCSV(xlsxPath, csvPath) {
 // 	return new Promise((resolve, reject) => {
 // 	  try {
@@ -98,6 +115,16 @@ const { promisify } = require('util');
 
 function activate(context) {
 
+	// Definir la ruta completa al directorio Documents
+	const userHome = os.homedir();
+	const documentsPath = path.join(userHome, 'Documents');
+	const directoryPath = path.join(documentsPath, 'accounts'); // Reemplaza 'nombreDeTuDirectorio' con el nombre que desees
+
+	// Crear el directorio si no existe
+	if (!fs.existsSync(directoryPath)) {
+	fs.mkdirSync(directoryPath, { recursive: true });  // La opción { recursive: true } asegura que se crearán las carpetas padre si no existen
+	}
+
 	let startDisposable = vscode.commands.registerCommand('extension.start', function () {
 		const terminal = vscode.window.createTerminal('Mi Terminal');
 		terminal.show();
@@ -128,14 +155,13 @@ function activate(context) {
 	// 	fs.writeFileSync(csvPath, csvContent);
 	//   }
 
-	const accountsDir = path.join(__dirname, 'accounts');
-
-	const watcher = chokidar.watch(accountsDir, {
+	const watcher = chokidar.watch(directoryPath, {
 		ignored: [
 			/(^|[\/\\])\../, 
 			/^\.~lock\./, 
 			/\.json$/, 
-			/[\/\\]~\$.+\.xlsx$/  // Este patrón debería excluir los archivos que comienzan con ~$ y terminan con .xlsx
+			/[\/\\]~\$.+\.xlsx$/,
+			/data/
 		],
 		persistent: true
 	});
@@ -182,17 +208,17 @@ function activate(context) {
 			const fileNameWithoutExtension = fileNameWithExtension.replace(path.extname(fileNameWithExtension), '');
 			modifiedRows[fileNameWithoutExtension] = modifiedRows[fileNameWithoutExtension] || [];
 			const copyOriginalCSVPath = path.join(path.dirname(changedPath), 'data', `${originalFileName}_original.csv`);
-			console.log(`Archivo original copiado: ${copyOriginalCSVPath}`);
+			//console.log(`Archivo original copiado: ${copyOriginalCSVPath}`);
 
 			const backupCSVPath = path.join(path.dirname(changedPath), 'data', `${originalFileName}_backup.csv`);
-			console.log(`Archivo backupCSVPath change: ${backupCSVPath}`);
+			//console.log(`Archivo backupCSVPath change: ${backupCSVPath}`);
 
 			await convertXLSXToCSV(changedPath, backupCSVPath);
 
 			const backupCSV = fs.readFileSync(backupCSVPath, 'utf8');
-			console.log(`Archivo backupCSV: ${backupCSV}`);
+			//console.log(`Archivo backupCSV: ${backupCSV}`);
 			const originalCopyCSV = fs.readFileSync(copyOriginalCSVPath, 'utf8');
-			console.log(`Archivo originalCopyCSV: ${originalCopyCSV}`);
+			//console.log(`Archivo originalCopyCSV: ${originalCopyCSV}`);
 
 			const backupRows = Papa.parse(backupCSV, { header: true }).data;
 			const originalRows = Papa.parse(originalCopyCSV, { header: true }).data;
