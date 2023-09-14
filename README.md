@@ -1,61 +1,65 @@
-# Prolibu Jetpack
+# prolibu-jetpack README
 
-Prolibu Jetpack is designed to seamlessly manage, synchronize, and automate data interactions between your local environment and the Prolibu services. The application offers a suite of commands to enhance your data synchronization experience.
-## Table of Contents
+This is the README for your extension "prolibu-jetpack". After writing up a brief description, we recommend including the following sections.
 
-- [Commands](#commands)
-   - [signin](#signin)
-   - [import](#import)
-   - [export](#export)
-   - [watch](#watch)
-- [Contribution](#contribution)
+## Features
 
-## Commands
+Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
 
-### signin
+For example if there is an image subfolder under your extension project workspace:
 
-Authenticate and establish a connection with the Prolibu service.
+\!\[feature X\]\(images/feature-x.png\)
 
-**Usage**:
-```bash
-npm run signin
-```
+> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
 
-You'll be prompted to input your credentials. Once authenticated, the session will remain active until you choose to sign out.
+## Requirements
 
-### import
-Retrieve data from your Prolibu service and save it locally.
+If you have any requirements or dependencies, add a section describing those and how to install and configure them.
 
-**Usage**:
-```bash
-npm run import
+## Extension Settings
 
-node jetpack.js import --domain <your_domain> --collection <your_collection> --format <file_format>
+Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
 
-```
+For example:
 
-Follow the instructions to specify the type of data you wish to import and determine where you want it saved on your local environment.
+This extension contributes the following settings:
 
-### export
-Send data from your local environment to the Prolibu service.
+* `myExtension.enable`: Enable/disable this extension.
+* `myExtension.thing`: Set to `blah` to do something.
 
-**Usage**:
-```bash
-npm run export
+## Known Issues
 
-node jetpack.js export --domain <your_domain> --collection <your_collection> --format <file_format>
+Calling out known issues can help limit users opening duplicate issues against your extension.
 
-```
+## Release Notes
 
-Specify the path of the data file you aim to export, and the tool will handle the transfer to the specified Prolibu service.
+Users appreciate release notes as you update your extension.
 
-### watch
-Monitor specific files continuously for changes. Upon detecting a change, such as a modification in the file, Prolibu Jetpack will automatically process the changes and export them to the Prolibu service.
+### 1.0.0
 
-**Usage**:
-```bash
-npm run watch
+Initial release of ...
 
-node jetpack.js watch --domain <your_domain> --collection <your_collection> --format <file_format>
+### 1.0.1
 
-```
+Fixed issue #.
+
+### 1.1.0
+
+Added features X, Y, and Z.
+
+---
+
+## Working with Markdown
+
+You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
+
+* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
+* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
+* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets
+
+## For more information
+
+* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
+* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
+
+**Enjoy!**
