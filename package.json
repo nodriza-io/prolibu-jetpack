@@ -1,8 +1,18 @@
 {
   "name": "prolibu-jetpack",
+  "author": {
+    "name": "Juan Manuel",
+    "email": "juan.manuel.garcia@prolibu.com"
+  },
+  "repository": {
+    "url": "https://github.com/nodriza-io/prolibu-jetpack",
+    "type": "git"
+  },
+  "publisher": "code-prolibu-jetpack",
   "displayName": "prolibu-jetpack",
   "description": "Prolibu Jetpack is designed to seamlessly manage, synchronize, and automate data interactions between your local environment and the Prolibu services. The application offers a suite of commands to enhance your data synchronization experience.",
   "version": "0.0.1",
+  "icon": "icons/icon.png",
   "engines": {
     "vscode": "^1.82.0"
   },
