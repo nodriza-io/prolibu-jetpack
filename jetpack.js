@@ -1,5 +1,5 @@
-const yargs = require("yargs/yargs");
-const { hideBin } = require("yargs/helpers");
+const yargs = require('yargs/yargs');
+const { hideBin } = require('yargs/helpers');
 const getArguments = require('./lib/arguments');
 const signIn = require('./lib/signin');
 const signOut = require('./lib/signout');
@@ -10,12 +10,12 @@ const preview = require('./lib/preview');
 global.u = require('./lib/Utils');
 
 const commandHandlers = {
-  'signin': signIn,
-  'signout': signOut,
-  'import': (args) => importData(args.domain, args.collection, args.format),
-  'export': (args) => exportData(args.domain, args.collection, args.format),
-  'watch': (args) => watchData(args.domain, args.collection, args.format),
-  'preview': (args) => preview(args.domain, args.template)
+  signin: signIn,
+  signout: signOut,
+  import: (args) => importData(args.domain, args.collection, args.format, args.query),
+  export: (args) => exportData(args.domain, args.collection, args.format),
+  watch: (args) => watchData(args.domain, args.collection, args.format),
+  preview: (args) => preview(args.domain, args.template, args.port),
 };
 
 (async () => {
