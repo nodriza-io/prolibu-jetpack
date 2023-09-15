@@ -23,40 +23,43 @@
   "main": "./extension.js",
   "contributes": {
     "commands": [
-        {
+      {
         "command": "extension.openWebView",
-        "title": "Prolibu Jetpack - Server Preview"
-        }
-      ]
+        "title": "Prolibu Jetpack - Template Live Preview"
+      }
+    ]
   },
   "scripts": {
     "lint": "eslint .",
     "pretest": "npm run lint",
-    "test": "node ./test/runTest.js"
+    "test": "jest"
   },
   "devDependencies": {
-    "@types/vscode": "^1.82.0",
     "@types/mocha": "^10.0.1",
     "@types/node": "16.x",
-    "eslint": "^8.47.0",
-    "glob": "^10.3.3",
-    "mocha": "^10.2.0",
-    "typescript": "^5.1.6",
+    "@types/vscode": "^1.82.0",
     "@vscode/test-electron": "^2.3.4",
     "axios": "^1.5.0",
     "chokidar": "^3.5.3",
     "cli-progress": "^3.12.0",
     "colors": "^1.4.0",
+    "eslint": "^8.47.0",
     "exceljs": "^4.3.0",
     "express": "^4.18.2",
     "form-data": "^4.0.0",
+    "glob": "^10.3.3",
     "handlebars": "^4.7.8",
     "inquirer": "^9.2.10",
     "inquirer-autocomplete-prompt": "^3.0.0",
+    "mocha": "^10.2.0",
     "ncp": "^2.0.0",
     "papaparse": "^5.4.1",
     "reload": "^3.2.1",
+    "typescript": "^5.1.6",
     "xlsx": "^0.18.5",
     "yargs": "^17.7.2"
+  },
+  "dependencies": {
+    "open": "^9.1.0"
   }
 }
