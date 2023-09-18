@@ -134,3 +134,6 @@ terraform/
 
 accounts/*
 !accounts/.gitkeep
+
+
+tmp/
