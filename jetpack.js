@@ -8,6 +8,7 @@ const { exportData } = require('./lib/exportData');
 const watchData = require('./lib/watchData');
 const preview = require('./lib/preview');
 global.u = require('./lib/Utils');
+global._ = require('lodash');
 
 const commandHandlers = {
   signin: signIn,
