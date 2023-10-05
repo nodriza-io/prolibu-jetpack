@@ -16,7 +16,7 @@ const commandHandlers = {
   import: (args) => importData(args.domain, args.collection, args.format, args.query),
   export: (args) => exportData(args.domain, args.collection, args.format),
   watch: (args) => watchData(args.domain, args.collection, args.format),
-  preview: (args) => preview(args.domain, args.template, args.port),
+  preview: (args) => preview(args.domain, args.template, args.port, args.autoupload),
 };
 
 (async () => {
