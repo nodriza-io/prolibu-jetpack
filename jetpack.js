@@ -7,6 +7,8 @@ const importData = require('./lib/importData');
 const { exportData } = require('./lib/exportData');
 const watchData = require('./lib/watchData');
 const preview = require('./lib/preview');
+const syncFiles = require('./lib/syncFiles');
+
 global.u = require('./lib/Utils');
 global._ = require('lodash');
 
@@ -17,6 +19,7 @@ const commandHandlers = {
   export: (args) => exportData(args.domain, args.collection, args.format),
   watch: (args) => watchData(args.domain, args.collection, args.format),
   preview: (args) => preview(args.domain, args.template, args.port, args.autoupload),
+  sync: (args) => syncFiles(args.domain, args.targetPath, args.selectExt),
 };
 
 (async () => {
