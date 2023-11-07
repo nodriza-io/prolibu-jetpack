@@ -1,3 +1,5 @@
+# USAGE: docker build -t jetpack .
+
 # Use the official Ubuntu base image
 FROM ubuntu:latest
 
