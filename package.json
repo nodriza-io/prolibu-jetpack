@@ -30,8 +30,8 @@
     ]
   },
   "scripts": {
-    "lint": "eslint .",
-    "test": "jest"
+    "docker:build": "docker build -t jetpack .",
+    "docker:run": "docker stop jetpack;docker rm jetpack;docker run -it --name jetpack -p 3000:3000 -v \"$(pwd)/accounts:/jetpack/accounts\" jetpack /bin/bash"
   },
   "jest": {
     "testMatch": [
