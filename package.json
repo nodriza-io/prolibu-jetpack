@@ -31,7 +31,7 @@
   },
   "scripts": {
     "docker:build": "docker build -t jetpack .",
-    "docker:run": "docker run -it --name jetpack -p 3000:3000 -v $(pwd):/jetpack jetpack /bin/bash"
+    "docker:run": "docker stop jetpack || true; docker rm jetpack || true; docker run -it --name jetpack -p 3000:3000 -v ${PWD}:/jetpack jetpack /bin/bash"
   },
   "jest": {
     "testMatch": [
