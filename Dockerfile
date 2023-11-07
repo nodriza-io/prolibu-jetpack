@@ -1,21 +1,15 @@
 # USAGE: docker build -t jetpack .
 
-# Use the official Ubuntu base image
-FROM ubuntu:latest
+# Use the Node.js official image with your desired version and Ubuntu as base
+FROM node:20.6.1-buster
 
 # Set the working directory in the container to /jetpack
 WORKDIR /jetpack
 
-# Update and install dependencies
+# Install git and other dependencies you might need
 RUN apt-get update && apt-get install -y \
-    curl \
-    gnupg \
-    build-essential \
-    git # Install git
-
-# Install Node.js v20.x (including npm)
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs
+    git \
+    build-essential
 
 # Clone the specific GitHub repository into the working directory
 RUN git clone https://github.com/nodriza-io/prolibu-jetpack.git .
